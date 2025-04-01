@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, Fragment } from "react";
-import { useSocket } from "../context/SocketProvider";
-import PeerService from "../service/peer";
-import { useNavigate } from "react-router-dom";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import React, { useState, useEffect, useRef, Fragment } from 'react';
+import { useSocket } from '../context/SocketProvider';
+import PeerService from '../service/peer';
+import { useNavigate } from 'react-router-dom';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import {
   CircleArrowRight,
   CirclePlay,
@@ -13,8 +13,8 @@ import {
   MicOff,
   Video,
   VideoOff,
-} from "lucide-react";
-import { Toaster, toast } from "react-hot-toast";
+} from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 
 const Room = () => {
   const socket = useSocket();
@@ -26,10 +26,10 @@ const Room = () => {
   const peerInstance = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [messageArray, setMessageArray] = useState([]);
-  const [mySocketID, setMySocketId] = useState("");
-  const [otherUserID, setOtherUserID] = useState("");
+  const [mySocketID, setMySocketId] = useState('');
+  const [otherUserID, setOtherUserID] = useState('');
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const chatContainerRef = useRef(null);
@@ -43,7 +43,7 @@ const Room = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (loggedInUser) => {
       if (!loggedInUser) {
-        navigate("/");
+        navigate('/');
       } else {
         setUser(loggedInUser);
       }
@@ -62,18 +62,17 @@ const Room = () => {
         });
         // console.log("Local stream initialized:", stream);
         setLocalStream(stream);
-      }
-      catch (error) {
+      } catch (error) {
         // console.error(
         //   "Error accessing media devices:",
         //   error.name,
         //   error.message
         // );
-        if (error.name === "NotAllowedError") {
-          toast.error("Camera/Mic Permission Denied.");
+        if (error.name === 'NotAllowedError') {
+          toast.error('Camera/Mic Permission Denied.');
           // console.warn("Permissions denied for camera/microphone.");
-        } else if (error.name === "NotFoundError") {
-          toast.error("No Camera/Mic Found.");
+        } else if (error.name === 'NotFoundError') {
+          toast.error('No Camera/Mic Found.');
           // console.warn("No camera/microphone found.");
         }
       }
@@ -104,7 +103,7 @@ const Room = () => {
     localStream
       .getTracks()
       .forEach((track) =>
-        peerInstance.current.webRTCPeer.addTrack(track, localStream)
+        peerInstance.current.webRTCPeer.addTrack(track, localStream),
       );
   }, [localStream]);
 
@@ -129,7 +128,7 @@ const Room = () => {
     if (!socket || !isStarted) return;
 
     // When matched with another user
-    socket.on("join-room", async ({ roomId, from, me }) => {
+    socket.on('join-room', async ({ roomId, from, me }) => {
       setRoomId(roomId);
       setWaiting(false);
       setMySocketId(me);
@@ -140,7 +139,7 @@ const Room = () => {
       localStream
         .getTracks()
         .forEach((track) =>
-          peerInstance.current.webRTCPeer.addTrack(track, localStream)
+          peerInstance.current.webRTCPeer.addTrack(track, localStream),
         );
 
       // listening for remote stream
@@ -164,8 +163,8 @@ const Room = () => {
         //   peerInstance.current.webRTCPeer.iceConnectionState
         // );
 
-        if (peerInstance.current.webRTCPeer.iceConnectionState === "failed") {
-          toast.error("Connection Failed. Click Next!");
+        if (peerInstance.current.webRTCPeer.iceConnectionState === 'failed') {
+          toast.error('Connection Failed. Click Next!');
         }
       };
 
@@ -173,7 +172,7 @@ const Room = () => {
       peerInstance.current.webRTCPeer.onicecandidate = (event) => {
         if (event.candidate) {
           // console.log("Sending ICE candidate");
-          socket.emit("ice-candidate", {
+          socket.emit('ice-candidate', {
             candidate: event.candidate,
             to: from,
           });
@@ -185,12 +184,12 @@ const Room = () => {
         // This peer creates the offer
         // console.log("This peer is the offerer");
         const offer = await peerInstance.current.getOffer();
-        socket.emit("offer", { offer, roomId, to: from });
+        socket.emit('offer', { offer, roomId, to: from });
       }
     });
 
     // Receive an offer
-    socket.on("offer", async ({ offer, from, roomId }) => {
+    socket.on('offer', async ({ offer, from, roomId }) => {
       // console.log(`Received offer from ${from} in room ${roomId}`);
       setRoomId(roomId);
       setWaiting(false);
@@ -203,7 +202,7 @@ const Room = () => {
         localStream
           .getTracks()
           .forEach((track) =>
-            peerInstance.current.webRTCPeer.addTrack(track, localStream)
+            peerInstance.current.webRTCPeer.addTrack(track, localStream),
           );
 
         // Listen for remote stream
@@ -227,8 +226,8 @@ const Room = () => {
           //   peerInstance.current.webRTCPeer.iceConnectionState
           // );
 
-          if (peerInstance.current.webRTCPeer.iceConnectionState === "failed") {
-            toast.error("Connection Failed. Click Next!");
+          if (peerInstance.current.webRTCPeer.iceConnectionState === 'failed') {
+            toast.error('Connection Failed. Click Next!');
           }
         };
 
@@ -236,7 +235,7 @@ const Room = () => {
         peerInstance.current.webRTCPeer.onicecandidate = (event) => {
           if (event.candidate) {
             // console.log("Sending ICE candidate");
-            socket.emit("ice-candidate", {
+            socket.emit('ice-candidate', {
               candidate: event.candidate,
               to: from,
             });
@@ -248,40 +247,40 @@ const Room = () => {
       try {
         await peerInstance.current.setRemoteDescription(offer);
         const answer = await peerInstance.current.getAnswer(offer);
-        socket.emit("answer", { answer, to: from });
+        socket.emit('answer', { answer, to: from });
       } catch (error) {
-        toast.error("Connection Failed. Click Next!");
+        toast.error('Connection Failed. Click Next!');
       }
     });
 
     // Receive an answer
-    socket.on("answer", async ({ answer }) => {
+    socket.on('answer', async ({ answer }) => {
       // console.log("Received answer");
       if (
         peerInstance.current &&
-        peerInstance.current.webRTCPeer.signalingState === "have-local-offer"
+        peerInstance.current.webRTCPeer.signalingState === 'have-local-offer'
       ) {
         try {
           await peerInstance.current.setRemoteDescription(answer);
         } catch (error) {
           // console.error("Error setting remote answer:", error);
-          toast.error("Connection Failed. Click Next!");
+          toast.error('Connection Failed. Click Next!');
         }
       } else {
         console.error(
-          "Cannot set remote answer: RTCPeerConnection is not in the correct state",
-          peerInstance.current?.webRTCPeer.signalingState
+          'Cannot set remote answer: RTCPeerConnection is not in the correct state',
+          peerInstance.current?.webRTCPeer.signalingState,
         );
       }
     });
 
     // Receive an ICE candidate
-    socket.on("ice-candidate", async ({ candidate }) => {
+    socket.on('ice-candidate', async ({ candidate }) => {
       // console.log("Received ICE candidate");
       if (peerInstance.current) {
         try {
           await peerInstance.current.webRTCPeer.addIceCandidate(
-            new RTCIceCandidate(candidate)
+            new RTCIceCandidate(candidate),
           );
         } catch (error) {
           // console.error("Error adding ICE candidate:", error);
@@ -290,9 +289,9 @@ const Room = () => {
     });
 
     // When the other user leaves
-    socket.on("user-left", () => {
+    socket.on('user-left', () => {
       // console.log("Other user left the room");
-      toast.success("User Left. Click Next!");
+      toast.success('User Left. Click Next!');
       setRemoteStream(null);
       setRoomId(null);
       if (peerInstance.current) {
@@ -305,62 +304,60 @@ const Room = () => {
     });
 
     // Waiting for another user
-    socket.on("waiting", (message) => {
+    socket.on('waiting', (message) => {
       setWaiting(true);
-      toast.success("Searching NITians...");
+      toast.success('Searching NITians...');
     });
 
     // Clear messages
-    socket.on("clear-Messages", () => {
+    socket.on('clear-Messages', () => {
       setMessageArray([]);
       setWaiting(true);
-      socket.emit("next", { roomId, otherUserID });
+      socket.emit('next', { roomId, otherUserID });
     });
 
     // Receive chat message
-    socket.on("chat-message", ({ roomId, message, mySocketID: mySocketId }) => {
+    socket.on('chat-message', ({ roomId, message, mySocketID: mySocketId }) => {
       setMessageArray((e) => [...e, { message, mySocketId }]);
     });
 
     // active users
-    socket.on("active-users", (numberOfUsers) => {
+    socket.on('active-users', (numberOfUsers) => {
       setActiveUser(numberOfUsers);
     });
 
-    socket.on("user-typing", () => {
-      console.log("user is typing broooooo op");
+    socket.on('user-typing', () => {
       setIsTyping(true);
-    })
-    socket.on("stop-typing", () => {
-      console.log("user is not broooooo op");
+    });
+    socket.on('stop-typing', () => {
       setIsTyping(false);
-    })
+    });
 
-    socket.on("audio-muted", ()=>{
-      toast.error("Other user muted audio");
-    })
+    socket.on('audio-muted', () => {
+      toast.error('User Muted Audio.');
+    });
 
-    socket.on("video-muted", ()=>{
-      toast.error("Other user muted video");
-    })
+    socket.on('video-muted', () => {
+      toast.error('User Turned Off Video.');
+    });
 
     // Cleanup socket listeners on unmount
     return () => {
-      socket.off("join-room");
-      socket.off("offer");
-      socket.off("answer");
-      socket.off("ice-candidate");
-      socket.off("user-left");
-      socket.off("waiting");
-      socket.off("chat-message");
+      socket.off('join-room');
+      socket.off('offer');
+      socket.off('answer');
+      socket.off('ice-candidate');
+      socket.off('user-left');
+      socket.off('waiting');
+      socket.off('chat-message');
     };
   }, [socket, isStarted, localStream]);
 
   // Handle "Start" button click
   const handleStart = () => {
     setIsStarted(true);
-    socket.emit("start");
-    toast.success("Searching NITians..");
+    socket.emit('start');
+    toast.success('Searching NITians..');
   };
 
   // Handle "Next" button click
@@ -374,9 +371,9 @@ const Room = () => {
       remoteVideoRef.current.srcObject = null;
     }
     setMessageArray([]);
-    socket.emit("next", { roomId, otherUserID });
+    socket.emit('next', { roomId, otherUserID });
     setRoomId(null);
-    toast.success("Finding Next User!");
+    toast.success('Finding Next User!');
   };
 
   // Handle "Stop" button click
@@ -392,20 +389,19 @@ const Room = () => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
-    socket.emit("stop", { roomId, otherUserID });
-    toast.success("Stopped Successfully.");
+    socket.emit('stop', { roomId, otherUserID });
+    toast.success('Stopped Successfully.');
   };
 
-
   const handleChatBlur = () => {
-    console.log("bluring");
-    socket.emit("stop-typing", { roomId, otherUserID });
-  }
+    console.log('bluring');
+    socket.emit('stop-typing', { roomId, otherUserID });
+  };
 
   const handleChatFocus = () => {
-    console.log("focusing");
-    socket.emit("user-typing", { roomId, otherUserID });
-  }
+    console.log('focusing');
+    socket.emit('user-typing', { roomId, otherUserID });
+  };
 
   // Toggle audio
   const toggleAudio = () => {
@@ -415,11 +411,11 @@ const Room = () => {
         audioTrack.enabled = !audioTrack.enabled;
         setAudioEnabled(audioTrack.enabled);
         toast.success(
-          audioTrack.enabled ? "Microphone Unmuted." : "Microphone Muted."
+          audioTrack.enabled ? 'Microphone Unmuted.' : 'Microphone Muted.',
         );
-        if(!audioTrack.enabled){
-          socket.emit("audio-muted", {roomId, otherUserID});
-        } 
+        if (!audioTrack.enabled) {
+          socket.emit('audio-muted', { roomId, otherUserID });
+        }
       }
     }
   };
@@ -431,10 +427,10 @@ const Room = () => {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setVideoEnabled(videoTrack.enabled);
-        toast.success(videoTrack.enabled ? "Camera On." : "Camera Off.");
-        if(!videoTrack.enabled){
-          socket.emit("video-muted", {roomId, otherUserID});
-        } 
+        toast.success(videoTrack.enabled ? 'Camera On.' : 'Camera Off.');
+        if (!videoTrack.enabled) {
+          socket.emit('video-muted', { roomId, otherUserID });
+        }
       }
     }
   };
@@ -444,17 +440,17 @@ const Room = () => {
     if (!message.trim()) return;
 
     if (!roomId) {
-      toast.error("Starts When User Joins!");
+      toast.error('Starts When User Joins!');
       return;
     }
     setMessageArray((e) => [...e, { message, mySocketId: mySocketID }]);
-    socket.emit("chat-message", { roomId, message, mySocketID, otherUserID });
-    setMessage("");
+    socket.emit('chat-message', { roomId, message, mySocketID, otherUserID });
+    setMessage('');
   };
 
   // Handle Enter key press in chat handleChatChange
   const handleKeyPress = (event) => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       sendMessage();
     }
   };
@@ -466,7 +462,7 @@ const Room = () => {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' width='20' height='20' fill='none' stroke-width='2' stroke='%23E0E0E0'%3e%3cpath d='M0 .5H19.5V20'/%3e%3c/svg%3e")`,
       }}
     >
-      <div className="fixed top-2 right-2 inline-flex w-fit items-center gap-2 z-10 rounded-lg border border-emerald-500 bg-emerald-200 px-3 py-1.5">
+      <div className="fixed top-2 right-2 z-10 inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-500 bg-emerald-200 px-3 py-1.5">
         <div className="relative size-2.5 rounded-full bg-green-500">
           <span className="ping-large absolute inset-0 rounded-full bg-red-600" />
         </div>
@@ -483,7 +479,7 @@ const Room = () => {
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="grid gap-4 md:gap-6 lg:grid-cols-2 xl:gap-8">
           {/* Local Video Window */}
-          <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 object-contain shadow-xl md:shadow-2xl h-82 md:h-64 lg:h-90 xl:h-96">
+          <div className="relative flex h-82 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 object-contain shadow-xl md:h-64 md:shadow-2xl lg:h-90 xl:h-96">
             {localStream ? (
               <Fragment>
                 <video
@@ -491,22 +487,24 @@ const Room = () => {
                   autoPlay
                   muted
                   playsInline
-                  className="h-full w-full object-cover rotate-y-180"
+                  className="h-full w-full rotate-y-180 object-cover"
                 />
 
                 {/* Media Controls */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10">
+                <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3">
                   <button
                     onClick={toggleAudio}
-                    className={`rounded-full p-2 ${audioEnabled ? "bg-green-500" : "bg-red-500"
-                      } text-white cursor-pointer`}
+                    className={`rounded-full p-2 ${
+                      audioEnabled ? 'bg-green-500' : 'bg-red-500'
+                    } cursor-pointer text-white`}
                   >
                     {audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
                   </button>
                   <button
                     onClick={toggleVideo}
-                    className={`rounded-full p-2 ${videoEnabled ? "bg-green-500" : "bg-red-500"
-                      } text-white cursor-pointer`}
+                    className={`rounded-full p-2 ${
+                      videoEnabled ? 'bg-green-500' : 'bg-red-500'
+                    } cursor-pointer text-white`}
                   >
                     {videoEnabled ? (
                       <Video size={20} />
@@ -518,7 +516,7 @@ const Room = () => {
               </Fragment>
             ) : (
               <div className="flex flex-col items-center gap-4 p-5">
-                <Loader className="animate-spin [animation-duration:2s] size-12 md:size-20" />
+                <Loader className="size-12 animate-spin [animation-duration:2s] md:size-20" />
                 <p className="text-center text-lg md:text-2xl">
                   Loading your video...
                 </p>
@@ -527,7 +525,7 @@ const Room = () => {
           </div>
 
           {/* Remote Video Window */}
-          <div className="flex items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 object-contain shadow-xl md:shadow-2xl h-82 md:h-64 lg:h-90 xl:h-96">
+          <div className="flex h-82 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 object-contain shadow-xl md:h-64 md:shadow-2xl lg:h-90 xl:h-96">
             {remoteStream ? (
               <video
                 ref={remoteVideoRef}
@@ -539,7 +537,7 @@ const Room = () => {
               <div className="flex items-center justify-center p-4">
                 {waiting ? (
                   <div className="flex flex-col items-center justify-center gap-4">
-                    <Loader className="animate-spin [animation-duration:2s] size-12 md:size-20" />
+                    <Loader className="size-12 animate-spin [animation-duration:2s] md:size-20" />
                     <p className="text-center text-lg md:text-2xl">
                       Waiting For NITians...
                     </p>
@@ -551,7 +549,7 @@ const Room = () => {
                       alt="Avatar"
                       className="size-24 md:size-36"
                     />
-                    <p className="text-lg md:text-2xl mt-2">
+                    <p className="mt-2 text-lg md:text-2xl">
                       Click Start/Next To Search...
                     </p>
                   </div>
@@ -566,10 +564,10 @@ const Room = () => {
       <div className="container mx-auto px-4 pb-8">
         <div className="grid gap-4 md:gap-6 lg:grid-cols-2 xl:gap-8">
           <div className="flex flex-col justify-evenly">
-            <div className="justify-center gap-4 flex mb-4">
+            <div className="mb-4 flex justify-center gap-4">
               {!isStarted ? (
                 <button
-                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-3 py-1 md:px-6 md:py-2.5 text-lg font-medium text-white shadow-xl hover:shadow-2xl transition-all"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-3 py-1 text-lg font-medium text-white shadow-xl transition-all hover:shadow-2xl md:px-6 md:py-2.5"
                   onClick={handleStart}
                 >
                   <CirclePlay strokeWidth={2.5} className="size-6" />
@@ -577,23 +575,23 @@ const Room = () => {
                 </button>
               ) : waiting && !remoteStream ? (
                 <button
-                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-b from-orange-500 via-yellow-600 to-amber-700 px-3 py-1 md:px-6 md:py-2.5 text-lg font-medium text-white shadow-xl hover:shadow-2xl transition-all"
+                  className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-b from-orange-500 via-yellow-600 to-amber-700 px-3 py-1 text-lg font-medium text-white shadow-xl transition-all hover:shadow-2xl md:px-6 md:py-2.5"
                   onClick={handleStop}
                 >
                   <CircleStop strokeWidth={2.5} className="size-6" />
                   <p>Stop</p>
                 </button>
               ) : (
-                <div className="grid w-full gap-4 grid-cols-2">
+                <div className="grid w-full grid-cols-2 gap-4">
                   <button
-                    className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-200 bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 px-3 py-1 md:px-6 md:py-2.5 text-lg font-medium text-white shadow-xl hover:shadow-2xl transition-all"
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-200 bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 px-3 py-1 text-lg font-medium text-white shadow-xl transition-all hover:shadow-2xl md:px-6 md:py-2.5"
                     onClick={handleNext}
                   >
                     <p>Next</p>
                     <CircleArrowRight strokeWidth={2.5} className="size-6" />
                   </button>
                   <button
-                    className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-b from-yellow-400 via-yellow-500 to-amber-600 px-3 py-1 md:px-6 md:py-2.5 text-lg font-medium text-white shadow-xl hover:shadow-2xl transition-all"
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-200 bg-gradient-to-b from-yellow-400 via-yellow-500 to-amber-600 px-3 py-1 text-lg font-medium text-white shadow-xl transition-all hover:shadow-2xl md:px-6 md:py-2.5"
                     onClick={handleStop}
                   >
                     <CircleStop strokeWidth={2.5} className="size-6" />
@@ -604,19 +602,21 @@ const Room = () => {
             </div>
 
             {/* Chat Input */}
-            <div className="flex items-center gap-2 md:gap-4 mt-4">
+            <div className="mt-4 flex items-center gap-2 md:gap-4">
               <input
-                onChange={(e) => { setMessage(e.target.value) }}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                }}
                 type="text"
                 placeholder="Type Message..."
                 onKeyDown={handleKeyPress}
                 value={message}
-                className="w-full rounded-full bg-white py-2 pl-4 ring-2 ring-emerald-500 focus:outline-emerald-600 transition-all"
+                className="w-full rounded-full bg-white py-2 pl-4 ring-2 ring-emerald-500 transition-all focus:outline-emerald-600"
                 onFocus={handleChatFocus}
                 onBlur={handleChatBlur}
               />
               <button
-                className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-blue-200 bg-emerald-600 p-2.5 text-white shadow-xl hover:shadow-2xl hover:bg-emerald-700 transition-all"
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-blue-200 bg-emerald-600 p-2.5 text-white shadow-xl transition-all hover:bg-emerald-700 hover:shadow-2xl"
                 onClick={sendMessage}
               >
                 <SendHorizonal strokeWidth={2.5} className="size-5" />
@@ -625,44 +625,45 @@ const Room = () => {
           </div>
 
           {/* Chat Messages */}
-          <div
-            ref={chatContainerRef}
-            className="h-44 max-h-44 overflow-y-auto rounded-lg border-2 border-gray-400 bg-gray-100 p-4 shadow-xl"
-            style={{ position: "relative" }}
-          >
-            <b style={{ display: isTyping ? 'inline' : 'none', position: "absolute", top: "-2%", right: "60%", left: "43%", }}>
-              typing...
-            </b>
-            <div className="flex flex-col gap-2">
-              {messageArray.length === 0 && (
-                <>
-                  <p className="text-center text-gray-500 italic font-extralight">
+          <div className="relative h-44 max-h-44 rounded-lg border-2 border-gray-400 bg-gray-100 p-4 shadow-xl">
+            {/* Scrollable Messages */}
+            <div ref={chatContainerRef} className="h-full overflow-y-auto">
+              <div className="flex flex-col gap-2">
+                {messageArray.length === 0 && (
+                  <p className="text-center font-extralight text-gray-500 italic">
                     No Messages Yet.
                   </p>
-                </>
-              )}
-              {messageArray.map(({ message, mySocketId }, index) =>
-                mySocketID === mySocketId ? (
-                  <div key={index} className="flex flex-col items-end">
-                    <div className="max-w-3/4 rounded-2xl rounded-br-none bg-gradient-to-r from-teal-400 to-emerald-500 px-4 py-3 shadow-md">
-                      <p className="text-white text-sm">{message}</p>
+                )}
+                {messageArray.map(({ message, mySocketId }, index) =>
+                  mySocketID === mySocketId ? (
+                    <div key={index} className="flex flex-col items-end">
+                      <div className="max-w-3/4 rounded-2xl rounded-br-none bg-gradient-to-r from-teal-400 to-emerald-500 px-4 py-3 shadow-md">
+                        <p className="text-sm text-white">{message}</p>
+                      </div>
+                      <span className="mt-1 pr-2 text-xs text-emerald-600">
+                        You
+                      </span>
                     </div>
-                    <span className="text-xs text-emerald-600 mt-1 pr-2">
-                      You
-                    </span>
-                  </div>
-                ) : (
-                  <div key={index} className="flex flex-col items-start">
-                    <div className="max-w-3/4 rounded-2xl rounded-bl-none bg-gradient-to-r from-amber-300 to-orange-300 px-4 py-3 shadow-md">
-                      <p className="text-gray-800 text-sm">{message}</p>
+                  ) : (
+                    <div key={index} className="flex flex-col items-start">
+                      <div className="max-w-3/4 rounded-2xl rounded-bl-none bg-gradient-to-r from-amber-300 to-orange-300 px-4 py-3 shadow-md">
+                        <p className="text-sm text-gray-800">{message}</p>
+                      </div>
+                      <span className="mt-1 pl-2 text-xs text-amber-600">
+                        Other
+                      </span>
                     </div>
-                    <span className="text-xs text-amber-600 mt-1 pl-2">
-                      Other
-                    </span>
-                  </div>
-                )
-              )}
+                  ),
+                )}
+              </div>
             </div>
+
+            {/* Typing Indicator (Doesn't Scroll) */}
+            {isTyping && (
+              <b className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-gray-200 px-2 py-1 text-gray-500 shadow-md">
+                Typing...
+              </b>
+            )}
           </div>
         </div>
       </div>

@@ -14,7 +14,7 @@ import {
 
 import { LogIn, LogOut } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
-import avatarIMG from "/avatar.png";
+import avatarIMG from "../../../public/avatar.png";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,

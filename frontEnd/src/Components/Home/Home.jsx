@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { initializeApp } from 'firebase/app';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -10,11 +10,11 @@ import {
   setPersistence,
   browserLocalPersistence,
   updateProfile,
-} from 'firebase/auth';
+} from "firebase/auth";
 
-import { LogIn, LogOut } from 'lucide-react';
-import { Toaster, toast } from 'react-hot-toast';
-import avatarIMG from "../../../public/avatar.png"
+import { LogIn, LogOut } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
+import avatarIMG from "../../../public/avatar.png";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,8 +26,6 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -38,25 +36,25 @@ setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    toast.success("Please wait while we check for login", {
+    toast.success("Checking For Login!", {
       duration: 3000,
     });
-  }, [])
+  }, []);
 
   //  Keep user logged in even after refresh
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (loggedInUser) => {
       if (loggedInUser) {
         setUser(loggedInUser);
-        toast.success("Login found enjoy NIT TV", {
+        toast.success("Login Found.", {
           duration: 2000,
         });
       } else {
         setUser(null);
-        toast.error("No Login found, please use gmail to continue", {
+        toast.error("No Login Found. Please Login!", {
           duration: 2000,
         });
       }
@@ -66,7 +64,6 @@ export default function Home() {
   }, []);
 
   const handleGoogleLogin = async () => {
-
     try {
       const result = await signInWithPopup(auth, provider);
       const email = result.user.email;
@@ -109,26 +106,23 @@ export default function Home() {
 
       if (!isValid) {
         await signOut(auth);
-        toast.error('Only NITs emil ID allowed');
+        toast.error("Only NITs Email Allowed.");
         return false; // Indicate failure
       }
 
       setUser(result.user);
-      setError(''); // Clear any previous errors
+      setError(""); // Clear any previous errors
       toast.success(`Welcome, ${result.user.displayName}.`);
-
-    }
-
-    catch (err) {
-      setError('Login failed. Try again.');
-      toast.error('Login Failed! Try Again!');
+    } catch (err) {
+      setError("Login failed. Try again.");
+      toast.error("Login Failed. Try Again!");
     }
   };
 
   const handleLogout = async () => {
     await signOut(auth);
     setUser(null);
-    toast.success('Signed Out Successfully!');
+    toast.success("Signed Out Successfully.");
   };
 
   return (
@@ -155,8 +149,9 @@ export default function Home() {
             />
           </Link>
           <button
-            className={`${user ? 'bg-red-500' : 'bg-emerald-600'
-              } m-2 inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 tracking-wide text-white`}
+            className={`${
+              user ? "bg-red-500" : "bg-emerald-600"
+            } m-2 inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 tracking-wide text-white`}
             onClick={user ? handleLogout : handleGoogleLogin}
           >
             {user ? (
@@ -210,13 +205,13 @@ export default function Home() {
           </div>
           {!user && (
             <>
-              <div className="z-10 inline-flex w-fit items-center gap-4 rounded-lg border border-emerald-500 bg-emerald-200 px-3 py-1.5">
+              <div className="z-10 inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-500 bg-emerald-200 px-3 py-1.5">
                 <div className="relative size-2.5 rounded-full bg-green-500">
                   <span className="ping-large absolute inset-0 rounded-full bg-green-600" />
                 </div>
 
                 <p className="text-xs font-bold text-black">
-                  Hop In - No Attendance Required
+                  Hop In - No Attendance Required!
                 </p>
               </div>
               <div className="z-10 inline-flex w-fit items-center gap-4 rounded-lg border border-emerald-500 bg-emerald-200 px-3 py-1.5">
@@ -225,7 +220,7 @@ export default function Home() {
                 </div>
 
                 <p className="text-xs font-bold text-black">
-                  A secure platform that respects your privacy
+                  Safe. Secure. Assured.
                 </p>
               </div>
             </>
@@ -248,13 +243,14 @@ export default function Home() {
             </p>
           )}
           <p className="z-10 hidden max-w-5xl text-center text-3xl font-bold md:block">
-            🎥 Video Chat. &nbsp; 💬 Text Chat. &nbsp; 🙊 Unlimited Gossip. &nbsp; 💡Project Ideas
+            🎥 Video Chat. &nbsp; 💬 Text Chat. &nbsp; 🙊 Unlimited Gossip.
+            &nbsp; 💡Project Ideas.
           </p>
           <div className="z-10 flex flex-col gap-2 text-center text-xl font-bold md:hidden">
             <p>🎥 Video Chat.</p>
             <p>💬 Text Chat.</p>
             <p>🙊 Unlimited Gossip.</p>
-            <p>💡 Project Ideas</p>
+            <p>💡 Project Ideas.</p>
           </div>
           <p className="text-xm z-10 max-w-5xl text-center font-bold md:hidden">
             Feeling adventurous? Join random NITians in surprise chat rooms and
@@ -295,7 +291,7 @@ export default function Home() {
                 </svg>
 
                 <p className="text-sm tracking-wide text-white">
-                  Sign In with NIT's email-ID
+                  Sign In Using College Email
                 </p>
               </button>
               {/* <button className="z-10 flex cursor-pointer items-center gap-2 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-4 py-2 font-medium text-white shadow-xl hover:shadow-2xl">

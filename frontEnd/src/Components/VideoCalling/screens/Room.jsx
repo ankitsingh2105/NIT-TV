@@ -61,8 +61,7 @@ const Room = () => {
         });
         // console.log("Local stream initialized:", stream);
         setLocalStream(stream);
-      } 
-      catch (error) {
+      } catch (error) {
         // console.error(
         //   "Error accessing media devices:",
         //   error.name,
@@ -164,7 +163,7 @@ const Room = () => {
         // );
 
         if (peerInstance.current.webRTCPeer.iceConnectionState === "failed") {
-          toast.error("Connection Failed. Try Clicking Next!");
+          toast.error("Connection Failed. Click Next!");
         }
       };
 
@@ -227,7 +226,7 @@ const Room = () => {
           // );
 
           if (peerInstance.current.webRTCPeer.iceConnectionState === "failed") {
-            toast.error("Connection Failed. Try Clicking Next!");
+            toast.error("Connection Failed. Click Next!");
           }
         };
 
@@ -249,7 +248,7 @@ const Room = () => {
         const answer = await peerInstance.current.getAnswer(offer);
         socket.emit("answer", { answer, to: from });
       } catch (error) {
-        toast.error("Connection Error. Try Clicking Next!");
+        toast.error("Connection Error. Click Next!");
       }
     });
 
@@ -264,7 +263,7 @@ const Room = () => {
           await peerInstance.current.setRemoteDescription(answer);
         } catch (error) {
           // console.error("Error setting remote answer:", error);
-          toast.error("Connection Error. Try Clicking Next!");
+          toast.error("Connection Error. Click Next!");
         }
       } else {
         console.error(
@@ -358,7 +357,7 @@ const Room = () => {
     setMessageArray([]);
     socket.emit("next", { roomId, otherUserID });
     setRoomId(null);
-    toast.success("Finding Next User.");
+    toast.success("Finding Next User!");
   };
 
   // Handle "Stop" button click
@@ -409,7 +408,7 @@ const Room = () => {
     if (!message.trim()) return;
 
     if (!roomId) {
-      toast.error("Starts When User Joins!");
+      toast.error("Chat Starts When User Joins!");
       return;
     }
     setMessageArray((e) => [...e, { message, mySocketId: mySocketID }]);

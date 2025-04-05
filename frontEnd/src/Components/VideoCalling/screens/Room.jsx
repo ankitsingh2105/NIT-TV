@@ -133,7 +133,7 @@ const Room = () => {
       setWaiting(false);
       setMySocketId(me);
       setOtherUserID(from);
-      if(!peerInstance.current){
+      if (!peerInstance.current) {
         peerInstance.current = new PeerService();
       }
 
@@ -257,24 +257,29 @@ const Room = () => {
 
     // Receive an answer
     socket.on("answer", async ({ answer }) => {
-      // console.log("Received answer");
-      if (
-        peerInstance.current &&
-        peerInstance.current.webRTCPeer.signalingState === "have-local-offer"
-      ) {
+      const peer = peerInstance.current?.webRTCPeer;
+
+      if (!peer) return;
+
+      const state = peer.signalingState;
+
+      if (state === "have-local-offer") {
         try {
           await peerInstance.current.setRemoteDescription(answer);
         } catch (error) {
-          // console.error("Error setting remote answer:", error);
-          toast.error("Connection Failed. Click Next!");
+          toast.error("Failed to set remote answer.");
+          console.error("Error setting remote answer:", error);
         }
+      } else if (state === "stable") {
+        // Already set?
+        console.warn("Answer received but signalingState is already stable. Ignoring.");
       } else {
         console.error(
-          "Cannot set remote answer: RTCPeerConnection is not in the correct state",
-          peerInstance.current?.webRTCPeer.signalingState
+          `Cannot set remote answer: Unexpected signaling state '${state}'`
         );
       }
     });
+
 
     // Receive an ICE candidate
     socket.on("ice-candidate", async ({ candidate }) => {
@@ -495,17 +500,15 @@ const Room = () => {
                 <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3">
                   <button
                     onClick={toggleAudio}
-                    className={`rounded-full p-2 ${
-                      audioEnabled ? "bg-green-500" : "bg-red-500"
-                    } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${audioEnabled ? "bg-green-500" : "bg-red-500"
+                      } cursor-pointer text-white`}
                   >
                     {audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
                   </button>
                   <button
                     onClick={toggleVideo}
-                    className={`rounded-full p-2 ${
-                      videoEnabled ? "bg-green-500" : "bg-red-500"
-                    } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${videoEnabled ? "bg-green-500" : "bg-red-500"
+                      } cursor-pointer text-white`}
                   >
                     {videoEnabled ? (
                       <Video size={20} />

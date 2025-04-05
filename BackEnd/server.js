@@ -13,17 +13,19 @@ app.get("/", (req, response) => {
 
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173", "https://manitv.vercel.app", "https://manitv.live", "https://nittv.vercel.app", "https://nittv.live",  "https://nittvtest.vercel.app" ],
+        origin: ["http://localhost:5173", "https://manitv.vercel.app", "https://manitv.live", "https://nittv.vercel.app", "https://nittv.live", "https://nittvtest.vercel.app"],
         methods: ["GET", "POST"],
     },
 });
 
 let availableUsers = new Set();
+const matchedUsers = new Set();
+
 
 // Store active rooms (key: roomId, value: array of user socket IDs)
 const rooms = new Map();
 
-let activeUsers=0; 
+let activeUsers = 0;
 
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
@@ -34,7 +36,7 @@ io.on("connection", (socket) => {
     });
 
     setInterval(() => {
-        const numberOfUsers = availableUsers.size + 2*rooms.size;
+        const numberOfUsers = availableUsers.size + 2 * rooms.size;
         io.emit("active-users", numberOfUsers);
     }, 10000);
 
@@ -75,27 +77,28 @@ io.on("connection", (socket) => {
         io.to(otherUserId).emit("chat-message", { roomId, message, mySocketID });
     });
 
-    socket.on("user-typing", ({roomId, otherUserID}) => {
+    socket.on("user-typing", ({ roomId, otherUserID }) => {
         io.to(otherUserID).emit("user-typing");
         console.log("use is typingr");
     })
-    socket.on("stop-typing", ({roomId, otherUserID}) => {
+    socket.on("stop-typing", ({ roomId, otherUserID }) => {
         io.to(otherUserID).emit("stop-typing");
         console.log("use is stopping typing");
     })
 
 
-    socket.on("audio-muted", ({roomId, otherUserID})=>{
+    socket.on("audio-muted", ({ roomId, otherUserID }) => {
         io.to(otherUserID).emit("audio-muted");
     })
 
-    socket.on("video-muted", ({roomId, otherUserID})=>{
+    socket.on("video-muted", ({ roomId, otherUserID }) => {
         io.to(otherUserID).emit("video-muted");
     })
 
 
     socket.on("disconnect", () => {
         availableUsers.delete(socket.id);
+        matchedUsers.delete(socket.id);
         for (const [roomId, users] of rooms.entries()) {
             if (users.includes(socket.id)) {
                 leaveRoom(socket, roomId);
@@ -107,6 +110,55 @@ io.on("connection", (socket) => {
 });
 
 let isMatching = false;
+
+function matchUsers(socket) {
+    if (isMatching) {
+        setTimeout(() => matchUsers(socket), 100);
+        return;
+    }
+
+    isMatching = true;
+    try {
+        if (matchedUsers.has(socket.id)) {
+            isMatching = false;
+            return;
+        }
+
+        availableUsers.delete(socket.id);
+
+        const iterator = availableUsers.values();
+        const { value: otherUserId, done } = iterator.next();
+
+        if (!done && !matchedUsers.has(otherUserId)) {
+            availableUsers.delete(otherUserId);
+
+            const roomId = `${socket.id}-${otherUserId}`;
+            rooms.set(roomId, [socket.id, otherUserId]);
+            matchedUsers.add(socket.id);
+            matchedUsers.add(otherUserId);
+
+            socket.join(roomId);
+            io.to(otherUserId).emit("join-room", {
+                roomId,
+                from: socket.id,
+                me: otherUserId,
+            });
+            socket.emit("join-room", {
+                roomId,
+                from: otherUserId,
+                me: socket.id,
+            });
+
+            console.log(`Matched ${socket.id} with ${otherUserId} in room ${roomId}`);
+        } else {
+            availableUsers.add(socket.id);
+            socket.emit("waiting", "Waiting for another user...");
+        }
+    } finally {
+        isMatching = false;
+    }
+}
+
 
 function matchUsers(socket) {
     // If already matching, delay this attempt
@@ -152,10 +204,9 @@ function matchUsers(socket) {
             socket.emit("waiting", "Waiting for another user...");
         }
     } finally {
-        isMatching = false; 
+        isMatching = false;
     }
 }
-
 
 function leaveRoom(socket, roomId) {
     if (roomId && rooms.has(roomId)) {
@@ -163,7 +214,9 @@ function leaveRoom(socket, roomId) {
         const otherUserId = users.find((id) => id !== socket.id);
         if (otherUserId) {
             io.to(otherUserId).emit("user-left", { roomId });
+            matchedUsers.delete(otherUserId);
         }
+        matchedUsers.delete(socket.id);
         socket.leave(roomId);
         rooms.delete(roomId);
         console.log(`User ${socket.id} left room ${roomId}`);

@@ -37,6 +37,8 @@ io.on("connection", (socket) => {
 
     setInterval(() => {
         const numberOfUsers = availableUsers.size + 2 * rooms.size;
+        console.log("Rooms :: " , rooms);
+        console.log("Availabe users set :: ", availableUsers);
         io.emit("active-users", numberOfUsers);
     }, 10000);
 

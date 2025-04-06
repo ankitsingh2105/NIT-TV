@@ -255,7 +255,8 @@ const Room = () => {
       if (state === "have-local-offer") {
         try {
           await peerInstance.current.setRemoteDescription(answer);
-        } catch (error) {
+        } 
+        catch (error) {
           toast.error("Failed to set remote answer.");
           console.error("Error setting remote answer:", error);
         }

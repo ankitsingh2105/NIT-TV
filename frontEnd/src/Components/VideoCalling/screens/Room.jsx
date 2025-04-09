@@ -121,7 +121,7 @@ const Room = () => {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messageArray]);
+  }, [messageArray, isTyping]);
 
   // Handle socket events
   useEffect(() => {
@@ -142,9 +142,9 @@ const Room = () => {
 
       // Prevent duplicate tracks being added
       if (pc.getSenders().length === 0) {
-        localStream.getTracks().forEach((track) =>
-          pc.addTrack(track, localStream)
-        );
+        localStream
+          .getTracks()
+          .forEach((track) => pc.addTrack(track, localStream));
       }
 
       // Setup handlers
@@ -177,7 +177,6 @@ const Room = () => {
         socket.emit("offer", { offer, roomId, to: from });
       }
     });
-
 
     // Receive an offer
     socket.on("offer", async ({ offer, from, roomId }) => {
@@ -255,21 +254,21 @@ const Room = () => {
       if (state === "have-local-offer") {
         try {
           await peerInstance.current.setRemoteDescription(answer);
-        } 
-        catch (error) {
+        } catch (error) {
           toast.error("Failed to set remote answer.");
           console.error("Error setting remote answer:", error);
         }
       } else if (state === "stable") {
         // Already set?
-        console.warn("Answer received but signalingState is already stable. Ignoring.");
+        console.warn(
+          "Answer received but signalingState is already stable. Ignoring."
+        );
       } else {
         console.error(
           `Cannot set remote answer: Unexpected signaling state '${state}'`
         );
       }
     });
-
 
     // Receive an ICE candidate
     socket.on("ice-candidate", async ({ candidate }) => {
@@ -387,8 +386,6 @@ const Room = () => {
     socket.emit("next", { roomId, otherUserID });
     toast.success("Finding Next User!");
   };
-
-
 
   // Handle "Stop" button click
   const handleStop = () => {
@@ -508,15 +505,17 @@ const Room = () => {
                 <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3">
                   <button
                     onClick={toggleAudio}
-                    className={`rounded-full p-2 ${audioEnabled ? "bg-green-500" : "bg-red-500"
-                      } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${
+                      audioEnabled ? "bg-green-500" : "bg-red-500"
+                    } cursor-pointer text-white`}
                   >
                     {audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
                   </button>
                   <button
                     onClick={toggleVideo}
-                    className={`rounded-full p-2 ${videoEnabled ? "bg-green-500" : "bg-red-500"
-                      } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${
+                      videoEnabled ? "bg-green-500" : "bg-red-500"
+                    } cursor-pointer text-white`}
                   >
                     {videoEnabled ? (
                       <Video size={20} />
@@ -646,6 +645,7 @@ const Room = () => {
                     No Messages Yet.
                   </p>
                 )}
+
                 {messageArray.map(({ message, mySocketId }, index) =>
                   mySocketID === mySocketId ? (
                     <div key={index} className="flex flex-col items-end">
@@ -667,15 +667,35 @@ const Room = () => {
                     </div>
                   )
                 )}
+
+                {/* WhatsApp-style Typing Indicator */}
+                {isTyping && (
+                  <div className="flex flex-col items-start">
+                    <div className="max-w-3/4 rounded-2xl rounded-bl-none bg-gray-200 px-4 py-2 shadow-md">
+                      <div className="flex items-center py-1">
+                        <div className="flex space-x-1">
+                          <div
+                            className="h-2 w-2 rounded-full bg-gray-500 animate-bounce"
+                            style={{ animationDelay: "0ms" }}
+                          ></div>
+                          <div
+                            className="h-2 w-2 rounded-full bg-gray-500 animate-bounce"
+                            style={{ animationDelay: "150ms" }}
+                          ></div>
+                          <div
+                            className="h-2 w-2 rounded-full bg-gray-500 animate-bounce"
+                            style={{ animationDelay: "300ms" }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="mt-1 pl-2 text-xs text-gray-500">
+                      Typing...
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <b className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-md bg-gray-200 px-2 py-1 text-gray-500 shadow-md">
-                Typing...
-              </b>
-            )}
           </div>
         </div>
       </div>

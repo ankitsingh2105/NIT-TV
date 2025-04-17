@@ -41,24 +41,18 @@ export default function Home() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    toast.success('Checking For Login!', {
-      duration: 1000,
-    });
-  }, []);
-
   //  Keep user logged in even after refresh
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (loggedInUser) => {
       if (loggedInUser) {
         setUser(loggedInUser);
         toast.success('Login Found.', {
-          duration: 2000,
+          duration: 1000,
         });
       } else {
         setUser(null);
         toast.error('No Login Found. Please Login!', {
-          duration: 2000,
+          duration: 1000,
         });
       }
     });
@@ -118,7 +112,6 @@ export default function Home() {
       toast.success(`Welcome, ${result.user.displayName}.`);
     } catch (err) {
       setError('Login failed. Try again.');
-      toast.error('Login Failed. Try Again!');
     }
   };
 
@@ -297,7 +290,7 @@ export default function Home() {
                   Sign In Using College Email
                 </p>
               </button>
-              <button className="align-center z-10 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-4 py-2 font-medium text-white shadow-xl hover:shadow-2xl">
+              {/* <button className="align-center z-10 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 px-4 py-2 font-medium text-white shadow-xl hover:shadow-2xl">
                 <svg
                   fill="#ffffff"
                   viewBox="0 0 32 32"
@@ -308,15 +301,15 @@ export default function Home() {
                 >
                   <path d="M16 15.503A5.041 5.041 0 1 0 16 5.42a5.041 5.041 0 0 0 0 10.083zm0 2.215c-6.703 0-11 3.699-11 5.5v3.363h22v-3.363c0-2.178-4.068-5.5-11-5.5z"></path>
                 </svg>
-                {/* <p
+                <p
                   onClick={() => {
                     navigate('/nitExclusive');
                   }}
                   className="text-sm tracking-wide text-white"
                 >
                   Continue As Guest
-                </p> */}
-              </button>
+                </p>
+              </button> */}
             </div>
           )}
         </main>

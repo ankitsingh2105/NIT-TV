@@ -25,35 +25,50 @@ const io = new Server(server, {
     },
 });
 
-let availableUsers = [];
+const availableUsers = new Set();
 const rooms = new Map();
-const transitioningUsers = new Set(); // matching/leaving users here
+const transitioningUsers = new Set();
 let activeUsers = 0;
+
+// Global interval for active users count
+setInterval(() => {
+    io.emit("active-users", activeUsers);
+}, 10000);
 
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
     activeUsers++;
 
     socket.on("start", () => {
-        if (!transitioningUsers.has(socket.id)) {
-            availableUsers.push(socket.id);
-            matchUsers(socket);
+        if (transitioningUsers.has(socket.id) || isUserInRoom(socket.id)) {
+            return;
         }
+        transitioningUsers.add(socket.id);
+        availableUsers.add(socket.id);
+        matchUsers(socket);
+        transitioningUsers.delete(socket.id);
     });
-
-    setInterval(() => {
-        const numberOfUsers = availableUsers.length + 2 * rooms.size;
-        io.emit("active-users", numberOfUsers);
-    }, 10000);
 
     socket.on("next", ({ roomId: currentRoomId, otherUserID }) => {
         if (transitioningUsers.has(socket.id)) {
-            return; // Prevent duplicate processing
+            return;
         }
-        transitioningUsers.add(socket.id); // locking the users here
-        leaveRoom(socket, currentRoomId, otherUserID);
-        matchUsers(socket);
-        io.to(otherUserID).emit("clear-Messages");
+        transitioningUsers.add(socket.id);
+
+        if (currentRoomId && rooms.has(currentRoomId)) {
+            leaveRoom(socket, currentRoomId, otherUserID);
+            if (otherUserID) {
+                io.to(otherUserID).emit("clear-Messages");
+            }
+            matchUsers(socket);
+        } else {
+            // Unconnected user clicking "Next"
+            if (!isUserInRoom(socket.id)) {
+                matchUsers(socket);
+            }
+        }
+
+        transitioningUsers.delete(socket.id);
     });
 
     socket.on("stop", ({ roomId, otherUserID }) => {
@@ -62,8 +77,10 @@ io.on("connection", (socket) => {
         }
         transitioningUsers.add(socket.id);
         leaveRoom(socket, roomId, otherUserID);
-        availableUsers = availableUsers.filter((id) => id !== socket.id);
-        io.to(otherUserID).emit("clear-Messages");
+        availableUsers.delete(socket.id);
+        if (otherUserID) {
+            io.to(otherUserID).emit("clear-Messages");
+        }
         console.log(`User ${socket.id} stopped the stream`);
         transitioningUsers.delete(socket.id);
     });
@@ -84,7 +101,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("chat-message", ({ roomId, message, mySocketID, otherUserID }) => {
-        console.log(`Received message in server:`, message, "for room:", roomId, "users :: ", mySocketID, " !!", otherUserID);
+        console.log(`Received message in server: ${message} for room: ${roomId} users: ${mySocketID} !! ${otherUserID}`);
         io.to(otherUserID).emit("chat-message", { roomId, message, mySocketID });
     });
 
@@ -95,7 +112,7 @@ io.on("connection", (socket) => {
 
     socket.on("stop-typing", ({ roomId, otherUserID }) => {
         io.to(otherUserID).emit("stop-typing");
-        console.log("user is stopping typing");
+        console.log("user stopped typing");
     });
 
     socket.on("audio-muted", ({ roomId, otherUserID }) => {
@@ -107,7 +124,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-        availableUsers = availableUsers.filter((id) => id !== socket.id);
+        availableUsers.delete(socket.id);
         transitioningUsers.delete(socket.id);
         for (const [roomId, users] of rooms.entries()) {
             if (users.includes(socket.id)) {
@@ -121,35 +138,39 @@ io.on("connection", (socket) => {
 });
 
 function matchUsers(socket) {
-    if (!transitioningUsers.has(socket.id)) {
-        transitioningUsers.add(socket.id);
+    if (transitioningUsers.has(socket.id)) {
+        return;
     }
+    transitioningUsers.add(socket.id);
 
-    availableUsers = availableUsers.filter((id) => id !== socket.id);
+    availableUsers.delete(socket.id);
 
-    if (availableUsers.length > 0) {
-        const otherUserId = availableUsers.find((id) => !transitioningUsers.has(id));
+    if (availableUsers.size > 0) {
+        let otherUserId;
+        for (const id of availableUsers) {
+            if (!transitioningUsers.has(id) && !isUserInRoom(id)) {
+                otherUserId = id;
+                break;
+            }
+        }
         if (otherUserId) {
-            availableUsers = availableUsers.filter((id) => id !== otherUserId);
+            availableUsers.delete(otherUserId);
             const roomId = `${socket.id}-${otherUserId}`;
-
             rooms.set(roomId, [socket.id, otherUserId]);
             socket.join(roomId);
             io.to(otherUserId).emit("join-room", { roomId, from: socket.id, me: otherUserId });
             socket.emit("join-room", { roomId, from: otherUserId, me: socket.id });
             console.log(`Matched ${socket.id} with ${otherUserId} in room ${roomId}`);
-            transitioningUsers.delete(socket.id);
-            transitioningUsers.delete(otherUserId);
         } else {
-            availableUsers.push(socket.id);
+            availableUsers.add(socket.id);
             socket.emit("waiting", "Waiting for another user...");
-            transitioningUsers.delete(socket.id);
         }
     } else {
-        availableUsers.push(socket.id);
+        availableUsers.add(socket.id);
         socket.emit("waiting", "Waiting for another user...");
-        transitioningUsers.delete(socket.id);
     }
+
+    transitioningUsers.delete(socket.id);
 }
 
 function leaveRoom(socket, roomId, otherUserID) {
@@ -162,5 +183,13 @@ function leaveRoom(socket, roomId, otherUserID) {
         rooms.delete(roomId);
         console.log(`User ${socket.id} left room ${roomId}`);
     }
-    transitioningUsers.delete(socket.id);
+}
+
+function isUserInRoom(userId) {
+    for (const [, users] of rooms.entries()) {
+        if (users.includes(userId)) {
+            return true;
+        }
+    }
+    return false;
 }

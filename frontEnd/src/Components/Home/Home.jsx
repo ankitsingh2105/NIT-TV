@@ -105,13 +105,13 @@ export default function Home() {
         'nitap.ac.in',
       ];
 
-      // const isValid = nitEmailDomains.some((domain) => email.includes(domain));
+      const isValid = nitEmailDomains.some((domain) => email.includes(domain));
 
-      // if (!isValid) {
-      //   await signOut(auth);
-      //   toast.error("Only NITs Email Allowed.");
-      //   return false; // Indicate failure
-      // }
+      if (!isValid) {
+        await signOut(auth);
+        toast.error("Only NITs Email Allowed.");
+        return false; // Indicate failure
+      }
 
       setUser(result.user);
       setError(''); // Clear any previous errors
@@ -308,14 +308,14 @@ export default function Home() {
                 >
                   <path d="M16 15.503A5.041 5.041 0 1 0 16 5.42a5.041 5.041 0 0 0 0 10.083zm0 2.215c-6.703 0-11 3.699-11 5.5v3.363h22v-3.363c0-2.178-4.068-5.5-11-5.5z"></path>
                 </svg>
-                <p
+                {/* <p
                   onClick={() => {
                     navigate('/nitExclusive');
                   }}
                   className="text-sm tracking-wide text-white"
                 >
                   Continue As Guest
-                </p>
+                </p> */}
               </button>
             </div>
           )}

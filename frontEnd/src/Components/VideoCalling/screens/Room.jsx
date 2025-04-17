@@ -35,22 +35,23 @@ const Room = () => {
   const chatContainerRef = useRef(null);
   const [activeUser, setActiveUser] = useState(3);
   const [isTyping, setIsTyping] = useState(false);
+  const [isNextProcessing, setIsNextProcessing] = useState(false);
 
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const auth = getAuth();
 
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (loggedInUser) => {
-  //     if (!loggedInUser) {
-  //       navigate("/");
-  //     } else {
-  //       setUser(loggedInUser);
-  //     }
-  //   });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (loggedInUser) => {
+      if (!loggedInUser) {
+        navigate("/");
+      } else {
+        setUser(loggedInUser);
+      }
+    });
 
-  //   return () => unsubscribe();
-  // }, [auth, navigate]);
+    return () => unsubscribe();
+  }, [auth, navigate]);
 
   // local media stream
   useEffect(() => {
@@ -359,11 +360,9 @@ const Room = () => {
   const [isNextDisabled, setIsNextDisabled] = useState(false);
 
   const handleNext = () => {
-    if (isNextDisabled) return;
-    setIsNextDisabled(true);
-    setTimeout(() => setIsNextDisabled(false), 1000); // debounce 1s
+    if (isNextProcessing) return;
+    setIsNextProcessing(true);
 
-    // Clean up existing peer connection
     if (peerInstance.current) {
       const pc = peerInstance.current.webRTCPeer;
       pc.ontrack = null;
@@ -374,17 +373,17 @@ const Room = () => {
       peerInstance.current = null;
     }
 
-    // Reset UI state
     setRemoteStream(null);
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
     setMessageArray([]);
-    setRoomId(null);
+    setWaiting(true);
 
-    // Tell server to find a new user
     socket.emit("next", { roomId, otherUserID });
     toast.success("Finding Next User!");
+
+    setTimeout(() => setIsNextProcessing(false), 1500); // 1.5s debounce
   };
 
   // Handle "Stop" button click
@@ -505,17 +504,15 @@ const Room = () => {
                 <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3">
                   <button
                     onClick={toggleAudio}
-                    className={`rounded-full p-2 ${
-                      audioEnabled ? "bg-green-500" : "bg-red-500"
-                    } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${audioEnabled ? "bg-green-500" : "bg-red-500"
+                      } cursor-pointer text-white`}
                   >
                     {audioEnabled ? <Mic size={20} /> : <MicOff size={20} />}
                   </button>
                   <button
                     onClick={toggleVideo}
-                    className={`rounded-full p-2 ${
-                      videoEnabled ? "bg-green-500" : "bg-red-500"
-                    } cursor-pointer text-white`}
+                    className={`rounded-full p-2 ${videoEnabled ? "bg-green-500" : "bg-red-500"
+                      } cursor-pointer text-white`}
                   >
                     {videoEnabled ? (
                       <Video size={20} />
